@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta, timezone
-
+from app.core.config import settings
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -26,6 +26,7 @@ from app.schemas.auth_schema import (
     ResetPasswordRequest,
     ResetPasswordResponse,
 )
+from app.services.email_service import send_reset_password_email
 
 # Lưu tạm reset token trong memory (production nên dùng Redis hoặc DB)
 _reset_tokens: dict[str, dict] = {}
@@ -133,7 +134,11 @@ class AuthService:
                 "expires": datetime.now(timezone.utc) + timedelta(hours=1),  # Token có hạn trong 1 giờ
             }
             # Gửi email (ở đây là chỉ mock)
-            await self.send_reset_email(data.email, token)
+            await send_reset_password_email(
+                to=user.email,
+                token=token,
+                reset_base_url=settings.RESET_PASSWORD_URL,
+            )
         return ForgotPasswordResponse()
 
     async def reset_password(self, data: ResetPasswordRequest) -> ResetPasswordResponse:
