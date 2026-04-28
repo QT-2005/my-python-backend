@@ -9,14 +9,12 @@ from app.core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
-def hash_password(plain: str) -> str:
-    return pwd_context.hash(plain)
 
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
-
+def get_password_hash(password: str) -> str:
+    return pwd_context.hash(password)
 
 
 def _create_token(data: dict, expires_delta: timedelta) -> str:
@@ -47,9 +45,3 @@ def decode_token(token: str) -> Optional[dict]:
         return None
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
