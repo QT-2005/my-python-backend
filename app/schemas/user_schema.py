@@ -36,5 +36,5 @@ class UpdateUserSettingsRequest(BaseModel):
 
 class ChangePasswordRequest(BaseModel):
     old_password: str
-    new_password: str = Field(min_length=6)
+    new_password: str = Field(min_length=8)  # 🔥 nâng từ 6 -> 8
     confirm_password: str

@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.routers.auth_router import router as auth_router  # FIX: routes -> routers
 from app.routers.user_router import router as user_router
+from app.routers.progress_router import router as progress_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -33,6 +34,7 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
 # ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
+app.include_router(progress_router, prefix="/api/v1")
 
 # ── Health Check ──────────────────────────────────────────────────────────────
 @app.get("/health", tags=["System"])
