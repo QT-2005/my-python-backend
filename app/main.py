@@ -1,54 +1,18 @@
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.core.database import create_tables, check_connection
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    print("=" * 50)
-    print(f"  {settings.PROJECT_NAME}")
-    print("=" * 50)
-
-    ok = check_connection()
-    if not ok:
-        print("⚠️  Server vẫn khởi động nhưng database chưa kết nối được.")
-        print("   Kiểm tra lại MYSQL_PASSWORD trong file .env")
-
-    # 2. Tạo bảng nếu chưa có
-    try:
-        create_tables()
-    except Exception as e:
-        print(f"⚠️  Không thể tạo bảng: {e}")
-
-    # 3. Seed dữ liệu mẫu
-    try:
-        from app.core.seed import seed_words
-        from app.core.database import SessionLocal
-        db = SessionLocal()
-        seed_words(db)
-        db.close()
-    except Exception as e:
-        print(f"⚠️  Seed thất bại: {e}")
-
-    print(f"🚀 Server đang chạy tại http://{settings.HOST}:{settings.PORT}")
-    print(f"📖 Swagger docs: http://127.0.0.1:{settings.PORT}/docs")
-    print("=" * 50)
-
-    yield
-
-    print("Server đang tắt...")
-
+from app.routers.auth_router import router as auth_router  # FIX: routes -> routers
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    description="API từ điển Anh-Việt với phiên âm IPA",
+    title=settings.APP_NAME,
     version="1.0.0",
-    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
+# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -57,32 +21,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Đăng ký router
-from app.routers.word import router as word_router
-app.include_router(word_router)
+# ── Global Exception Handler ──────────────────────────────────────────────────
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Lỗi server, vui lòng thử lại sau."},
+    )
 
+# ── Routers ───────────────────────────────────────────────────────────────────
+app.include_router(auth_router, prefix="/api/v1")
 
-@app.get("/", tags=["Root"])
-async def root():
-    return {
-        "message": f"{settings.PROJECT_NAME} đang chạy",
-        "docs": "/docs",
-        "endpoints": {
-            "tra_tu":        "GET /api/v1/words/lookup?q=cat",
-            "danh_sach":     "GET /api/v1/words",
-            "theo_chu_de":   "GET /api/v1/words?topic=animals",
-            "theo_trinh_do": "GET /api/v1/words?level=A1",
-            "tim_kiem":      "GET /api/v1/words?search=mèo",
-            "ngau_nhien":    "GET /api/v1/words/random?count=5",
-            "chu_de":        "GET /api/v1/words/topics",
-            "trinh_do":      "GET /api/v1/words/levels",
-            "them_tu":       "POST /api/v1/words",
-            "cap_nhat":      "PUT /api/v1/words/{id}",
-            "xoa_tu":        "DELETE /api/v1/words/{id}",
-        }
-    }
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host=settings.HOST, port=settings.PORT, reload=settings.DEBUG)
+# ── Health Check ──────────────────────────────────────────────────────────────
+@app.get("/health", tags=["System"])
+async def health_check() -> dict:
+    return {"status": "ok", "app": settings.APP_NAME}
