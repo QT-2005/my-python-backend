@@ -12,8 +12,6 @@ from app.schemas.content_schema import (
     LessonListResponse,
     LessonResponse,
     QuestionResponse,
-    SubmitLessonRequest,
-    SubmitLessonResponse,
     TopicListResponse,
     TopicResponse,
 )
@@ -151,81 +149,4 @@ class ContentService:
                 )
                 for q in lesson.questions
             ],
-        )
-    
-    async def submit_lesson(
-        self, lesson_id: str, user_id: str, data: SubmitLessonRequest
-    ) -> SubmitLessonResponse:
-        lesson_result = await self.db.execute(
-            select(Lesson).where(Lesson.id == lesson_id)
-        )
-        lesson = lesson_result.scalars().first()
-        if not lesson:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Không tìm thấy bài học.",
-            )
- 
-        # Upsert user_progress
-        progress_result = await self.db.execute(
-            select(UserProgress).where(
-                UserProgress.user_id == user_id,
-                UserProgress.lesson_id == lesson_id,
-            )
-        )
-        progress = progress_result.scalars().first()
- 
-        if progress:
-            progress.accuracy = data.accuracy
-            progress.time_spent_seconds = data.time_spent
-            progress.is_completed = True
-            progress.last_studied_at = datetime.now(timezone.utc)
-        else:
-            progress = UserProgress(
-                user_id=user_id,
-                lesson_id=lesson_id,
-                accuracy=data.accuracy,
-                time_spent_seconds=data.time_spent,
-                is_completed=True,
-            )
-            self.db.add(progress)
- 
-        # Lấy hoặc tạo UserStats
-        stats_result = await self.db.execute(
-            select(UserStats).where(UserStats.user_id == user_id)
-        )
-        stats = stats_result.scalars().first()
-        if not stats:
-            stats = UserStats(user_id=user_id)
-            self.db.add(stats)
- 
-        # Cộng XP chỉ khi bài chưa hoàn thành trước đó (tránh farm)
-        earned_xp = lesson.xp_reward if not progress.is_completed else 0
-        # Ghi lại: do upsert phía trên đã set is_completed=True, ta cần
-        # kiểm tra trước. Logic đơn giản: luôn cộng XP mỗi lần nộp
-        # (có thể điều chỉnh theo yêu cầu sản phẩm)
-        earned_xp = lesson.xp_reward
-        stats.total_xp += earned_xp
- 
-        # Cập nhật streak
-        current_streak = _update_streak(stats)
- 
-        # Cập nhật số từ đã mastered (accuracy >= 90% tính là mastered)
-        if data.accuracy >= 90:
-            # Đếm số question trong bài như là "từ mastered thêm"
-            q_count_result = await self.db.execute(
-                select(func.count()).select_from(Question).where(
-                    Question.lesson_id == lesson_id
-                )
-            )
-            new_words = q_count_result.scalar_one()
-            stats.words_mastered_count += new_words
- 
-        await self.db.flush()
- 
-        return SubmitLessonResponse(
-            earned_xp=earned_xp,
-            current_streak=current_streak,
-            mastered_words=stats.words_mastered_count,
-            ranking=_calc_ranking(stats.total_xp),
         )

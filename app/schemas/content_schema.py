@@ -1,5 +1,5 @@
-from typing import Any, Literal
-from pydantic import BaseModel, Field
+from typing import Literal
+from pydantic import BaseModel
 
 
 class TopicResponse(BaseModel):
@@ -46,12 +46,3 @@ class LessonDetailResponse(BaseModel):
     xp_reward: int
     questions: list[QuestionResponse]
 
-class SubmitLessonRequest(BaseModel):
-    accuracy: float = Field(ge=0.0, le=100.0, description="Tỉ lệ đúng (0–100)")
-    time_spent: int = Field(gt=0, description="Thời gian học (giây)")
-
-class SubmitLessonResponse(BaseModel):
-    earned_xp: int
-    current_streak: int
-    mastered_words: int
-    ranking: str

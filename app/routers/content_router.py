@@ -9,8 +9,6 @@ from app.models.user import User
 from app.schemas.content_schema import (
     LessonDetailResponse,
     LessonListResponse,
-    SubmitLessonRequest,
-    SubmitLessonResponse,
     TopicListResponse,
 )
 from app.services.content_service import ContentService
@@ -58,17 +56,3 @@ async def get_lesson_detail(
 ) -> LessonDetailResponse:
     return await ContentService(db).get_lesson_detail(lesson_id)
 
-@router.post(
-    "/lessons/{lesson_id}/submit",
-    response_model=SubmitLessonResponse,
-    summary="Nộp kết quả bài học",
-)
-async def submit_lesson(
-    lesson_id: str,
-    data: SubmitLessonRequest,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-) -> SubmitLessonResponse:
-    return await ContentService(db).submit_lesson(
-        lesson_id=lesson_id, user_id=current_user.id, data=data
-    )

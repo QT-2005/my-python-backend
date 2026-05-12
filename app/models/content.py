@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import (
+    Boolean,
     DateTime,
     Enum,
     Float,
@@ -85,7 +86,7 @@ class Question(Base):
     word: Mapped[str] = mapped_column(String(200), nullable=False)
     context_sentence: Mapped[str | None] = mapped_column(Text, nullable=True)
     correct_answer: Mapped[str] = mapped_column(String(500), nullable=False)
-    distractors: Mapped[Any | None] = mapped_column(JSON, nullable=True)
+    distractors: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime, nullable=False, server_default=func.now()
@@ -106,7 +107,7 @@ class UserProgress(Base):
     lesson_id: Mapped[str] = mapped_column(
         String(36), ForeignKey("lessons.id", ondelete="CASCADE"), primary_key=True
     )
-    is_completed: Mapped[bool] = mapped_column(Integer, nullable=False, default=False)
+    is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     accuracy: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     time_spent_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_studied_at: Mapped[datetime] = mapped_column(
