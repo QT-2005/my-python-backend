@@ -1,4 +1,12 @@
-from sqlalchemy import Column, String, Integer, Boolean, ForeignKey, DECIMAL
+from sqlalchemy import (
+    Column,
+    String,
+    Integer,
+    Boolean,
+    ForeignKey,
+    DECIMAL
+)
+
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -19,9 +27,26 @@ class UserProgress(Base):
         primary_key=True
     )
 
-    is_completed = Column(Boolean, default=False)
-    accuracy = Column(DECIMAL(5, 2), nullable=True)
-    time_spent_seconds = Column(Integer, nullable=True)
+    is_completed = Column(
+        Boolean,
+        default=False
+    )
+
+    accuracy = Column(
+        DECIMAL(5, 2),
+        nullable=True
+    )
+
+    time_spent_seconds = Column(
+        Integer,
+        nullable=True
+    )
+
+    # Basic spaced repetition
+    needs_review = Column(
+        Boolean,
+        default=False
+    )
 
     # Relationships
     user = relationship(

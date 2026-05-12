@@ -10,16 +10,43 @@ from app.models.user_progress import UserProgress
 
 
 class ProgressService:
+
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def submit_progress(self, user, lesson_id: str, data):
+    # =========================
+    # Helper
+    # =========================
+    def _calculate_ranking(
+        self,
+        total_xp: int
+    ) -> str:
+
+        if total_xp >= 10000:
+            return "Top 2%"
+
+        if total_xp >= 5000:
+            return "Top 10%"
+
+        return "Top 30%"
+
+    # =========================
+    # Submit Progress
+    # =========================
+    async def submit_progress(
+        self,
+        user,
+        lesson_id: str,
+        data
+    ):
 
         # =========================
         # 1. Get lesson
         # =========================
         result = await self.db.execute(
-            select(Lesson).where(Lesson.id == lesson_id)
+            select(Lesson).where(
+                Lesson.id == lesson_id
+            )
         )
 
         lesson = result.scalars().first()
@@ -45,6 +72,7 @@ class ProgressService:
         progress = result.scalars().first()
 
         if not progress:
+
             progress = UserProgress(
                 user_id=user.id,
                 lesson_id=lesson_id
@@ -55,6 +83,11 @@ class ProgressService:
         progress.is_completed = True
         progress.accuracy = data.accuracy
         progress.time_spent_seconds = data.time_spent
+
+        # =========================
+        # Basic spaced repetition
+        # =========================
+        progress.needs_review = data.accuracy < 70
 
         # =========================
         # 3. User stats
@@ -80,7 +113,10 @@ class ProgressService:
 
         elif (
             stats.last_active_date
-            and stats.last_active_date == date.fromordinal(today.toordinal() - 1)
+            and stats.last_active_date ==
+            date.fromordinal(
+                today.toordinal() - 1
+            )
         ):
             stats.streak_count += 1
 
@@ -106,19 +142,13 @@ class ProgressService:
             raise
 
         # =========================
-        # 7. Ranking
-        # =========================
-        ranking = "Top 10%"
-
-        if stats.total_xp >= 10000:
-            ranking = "Top 2%"
-
-        # =========================
-        # 8. Response
+        # 7. Response
         # =========================
         return {
             "earned_xp": earned_xp,
             "current_streak": stats.streak_count,
             "mastered_words": stats.words_mastered_count,
-            "ranking": ranking
+            "ranking": self._calculate_ranking(
+                stats.total_xp
+            )
         }
