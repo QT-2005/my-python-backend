@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.routers.auth_router import router as auth_router  # FIX: routes -> routers
+from app.routers.auth_router import router as auth_router
+from app.routers.content_router import router as content_router  # <-- thêm dòng này
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -12,7 +13,6 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,7 +21,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Global Exception Handler ──────────────────────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     return JSONResponse(
@@ -29,10 +28,9 @@ async def global_exception_handler(request: Request, exc: Exception) -> JSONResp
         content={"detail": "Lỗi server, vui lòng thử lại sau."},
     )
 
-# ── Routers ───────────────────────────────────────────────────────────────────
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(content_router, prefix="/api/v1")   # <-- thêm dòng này
 
-# ── Health Check ──────────────────────────────────────────────────────────────
 @app.get("/health", tags=["System"])
 async def health_check() -> dict:
     return {"status": "ok", "app": settings.APP_NAME}
