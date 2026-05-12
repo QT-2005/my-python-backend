@@ -2,8 +2,8 @@ from pydantic import BaseModel, Field
 
 
 class SubmitProgressRequest(BaseModel):
-    accuracy: float = Field(ge=0, le=100)
-    time_spent: int = Field(gt=0)
+    accuracy: float = Field(..., ge=0, le=100)
+    time_spent: int = Field(..., gt=0)
 
 
 class SubmitProgressResponse(BaseModel):
