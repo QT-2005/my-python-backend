@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
-from app.routers.auth_router import router as auth_router  # FIX: routes -> routers
+from app.routers.auth_router import router as auth_router
 from app.routers.user_router import router as user_router
 from app.routers.progress_router import router as progress_router
 

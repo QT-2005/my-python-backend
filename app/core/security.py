@@ -9,7 +9,6 @@ from app.core.config import settings
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-
 def hash_password(plain: str) -> str:
     return pwd_context.hash(plain)
 
@@ -20,12 +19,17 @@ def verify_password(plain: str, hashed: str) -> bool:
 
 def get_password_hash(password: str) -> str:
     return hash_password(password)
-    
+
 
 def _create_token(data: dict, expires_delta: timedelta) -> str:
     payload = data.copy()
     payload["exp"] = datetime.now(timezone.utc) + expires_delta
-    return jwt.encode(payload, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+
+    return jwt.encode(
+        payload,
+        settings.JWT_SECRET_KEY,
+        algorithm=settings.JWT_ALGORITHM,
+    )
 
 
 def create_access_token(user_id: str) -> str:
@@ -43,8 +47,11 @@ def create_refresh_token(user_id: str) -> str:
 
 
 def decode_token(token: str) -> Optional[dict]:
-    """Trả về payload nếu token hợp lệ, None nếu không."""
     try:
-        return jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=[settings.JWT_ALGORITHM])
+        return jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
     except JWTError:
         return None
