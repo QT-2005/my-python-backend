@@ -28,7 +28,6 @@ async def get_topics(
         None, description="Lọc theo loại nội dung"
     ),
     db: AsyncSession = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
 ) -> TopicListResponse:
     return await ContentService(db).get_topics(level=level, category=category)
 
@@ -40,7 +39,6 @@ async def get_topics(
 async def get_lessons(
     topic_id: str,
     db: AsyncSession = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
 ) -> LessonListResponse:
     return await ContentService(db).get_lessons_by_topic(topic_id)
 
@@ -52,7 +50,6 @@ async def get_lessons(
 async def get_lesson_detail(
     lesson_id: str,
     db: AsyncSession = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
 ) -> LessonDetailResponse:
     return await ContentService(db).get_lesson_detail(lesson_id)
 

@@ -4,6 +4,7 @@ from app.core.config import settings
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.core.security import (
     create_access_token,
@@ -37,7 +38,11 @@ class AuthService:
         self.db = db
 
     async def get_user_by_id(self, user_id: str) -> User | None:
-        result = await self.db.execute(select(User).where(User.id == user_id))
+        result = await self.db.execute(
+            select(User)
+            .where(User.id == user_id)
+            .options(selectinload(User.stats))
+        )
         return result.scalars().first()
 
     async def get_user_by_email(self, email: str) -> User | None:
