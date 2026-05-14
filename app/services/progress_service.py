@@ -4,9 +4,8 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.lesson import Lesson
+from app.models.content import Lesson, UserProgress
 from app.models.user_meta import UserStats
-from app.models.user_progress import UserProgress
 
 
 class ProgressService:
