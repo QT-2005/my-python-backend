@@ -1,12 +1,19 @@
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
 
 from app.models.user import User
+from app.models.user_progress import UserProgress
+
 from app.schemas.user_schema import (
     UpdateUserSettingsRequest,
     ChangePasswordRequest
 )
-from app.core.security import verify_password, get_password_hash
+
+from app.core.security import (
+    verify_password,
+    get_password_hash
+)
 
 
 class UserService:
@@ -17,6 +24,7 @@ class UserService:
     # HELPER METHODS
     # =========================
     def _calculate_tier(self, total_xp: int) -> str:
+
         if total_xp < 5000:
             return "Beginner"
 
@@ -43,6 +51,7 @@ class UserService:
     # 1. DASHBOARD
     # =========================
     async def get_dashboard(self, user: User):
+
         stats = user.stats
 
         total_xp = stats.total_xp if stats else 0
@@ -56,10 +65,14 @@ class UserService:
             "message": "Keep going!"
         }
 
-    async def _calculate_today_xp(self, user_id: str) -> int:
+    async def _calculate_today_xp(
+        self,
+        user_id: str
+    ) -> int:
+
         """
         TODO:
-        Query thật từ user_progress sau.
+        Sau này tính thật từ bảng activity/history.
         """
 
         return 0
@@ -68,15 +81,42 @@ class UserService:
     # 2. PROFILE
     # =========================
     async def get_profile(self, user: User):
+
         stats = user.stats
 
         total_xp = stats.total_xp if stats else 0
-        words_mastered = stats.words_mastered_count if stats else 0
 
-        # TODO:
-        # Sau này query thật từ bảng questions
-        total_words = 100
+        # =========================
+        # TOTAL LEARNED WORDS
+        # =========================
+        total_result = await self.db.execute(
+            select(func.count())
+            .select_from(UserProgress)
+            .where(
+                UserProgress.user_id == user.id
+            )
+        )
 
+        total_words = total_result.scalar() or 0
+
+        # =========================
+        # MASTERED WORDS
+        # accuracy >= 90
+        # =========================
+        mastered_result = await self.db.execute(
+            select(func.count())
+            .select_from(UserProgress)
+            .where(
+                UserProgress.user_id == user.id,
+                UserProgress.accuracy >= 90
+            )
+        )
+
+        words_mastered = mastered_result.scalar() or 0
+
+        # =========================
+        # MASTERY RATIO
+        # =========================
         mastery_ratio = self._calculate_mastery_ratio(
             words_mastered,
             total_words
@@ -108,6 +148,7 @@ class UserService:
     ):
 
         try:
+
             if data.daily_goal_minutes is not None:
                 user.daily_goal_minutes = data.daily_goal_minutes
 
@@ -115,6 +156,7 @@ class UserService:
 
                 # Defensive coding
                 if not user.settings:
+
                     from app.models.user_meta import UserSettings
 
                     user.settings = UserSettings(

@@ -1,21 +1,22 @@
 import uuid
 from datetime import datetime
-from typing import Any
 
 from sqlalchemy import (
-    Boolean,
     DateTime,
     Enum,
-    Float,
     ForeignKey,
-    Integer,
     JSON,
     SmallInteger,
     String,
     Text,
     func,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    relationship,
+)
 
 from app.core.database import Base
 
@@ -26,22 +27,37 @@ class Topic(Base):
     __tablename__ = "topics"
 
     id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
     )
-    title: Mapped[str] = mapped_column(String(200), nullable=False)
+
+    title: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False
+    )
+
     level: Mapped[str] = mapped_column(
-        Enum("A1", "A2", "B1", "B2", "C1", "C2"), nullable=False
+        Enum("A1", "A2", "B1", "B2", "C1", "C2"),
+        nullable=False
     )
+
     category: Mapped[str] = mapped_column(
-        Enum("Vocabulary", "Grammar"), nullable=False
+        Enum("Vocabulary", "Grammar"),
+        nullable=False
     )
+
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+        DateTime,
+        nullable=False,
+        server_default=func.now()
     )
 
     # Relationships
     lessons: Mapped[list["Lesson"]] = relationship(
-        "Lesson", back_populates="topic", cascade="all, delete-orphan"
+        "Lesson",
+        back_populates="topic",
+        cascade="all, delete-orphan"
     )
 
 
@@ -51,24 +67,51 @@ class Lesson(Base):
     __tablename__ = "lessons"
 
     id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
     )
+
     topic_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("topics.id", ondelete="CASCADE"), nullable=False
+        String(36),
+        ForeignKey("topics.id", ondelete="CASCADE"),
+        nullable=False
     )
-    order: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=1)
-    xp_reward: Mapped[int] = mapped_column(SmallInteger, nullable=False, default=100)
+
+    order: Mapped[int] = mapped_column(
+        SmallInteger,
+        nullable=False,
+        default=1
+    )
+
+    xp_reward: Mapped[int] = mapped_column(
+        SmallInteger,
+        nullable=False,
+        default=100
+    )
+
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+        DateTime,
+        nullable=False,
+        server_default=func.now()
     )
 
     # Relationships
-    topic: Mapped["Topic"] = relationship("Topic", back_populates="lessons")
-    questions: Mapped[list["Question"]] = relationship(
-        "Question", back_populates="lesson", cascade="all, delete-orphan"
+    topic: Mapped["Topic"] = relationship(
+        "Topic",
+        back_populates="lessons"
     )
-    progress_records: Mapped[list["UserProgress"]] = relationship(
-        "UserProgress", back_populates="lesson", cascade="all, delete-orphan"
+
+    questions: Mapped[list["Question"]] = relationship(
+        "Question",
+        back_populates="lesson",
+        cascade="all, delete-orphan"
+    )
+
+    progress: Mapped[list["UserProgress"]] = relationship(
+        "UserProgress",
+        back_populates="lesson",
+        cascade="all, delete-orphan"
     )
 
 
@@ -78,41 +121,50 @@ class Question(Base):
     __tablename__ = "questions"
 
     id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid.uuid4())
+        String(36),
+        primary_key=True,
+        default=lambda: str(uuid.uuid4())
     )
+
     lesson_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("lessons.id", ondelete="CASCADE"), nullable=False
+        String(36),
+        ForeignKey("lessons.id", ondelete="CASCADE"),
+        nullable=False
     )
-    word: Mapped[str] = mapped_column(String(200), nullable=False)
-    context_sentence: Mapped[str | None] = mapped_column(Text, nullable=True)
-    correct_answer: Mapped[str] = mapped_column(String(500), nullable=False)
-    distractors: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
-    image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+
+    word: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False
+    )
+
+    context_sentence: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True
+    )
+
+    correct_answer: Mapped[str] = mapped_column(
+        String(500),
+        nullable=False
+    )
+
+    distractors: Mapped[list[str] | None] = mapped_column(
+        JSON,
+        nullable=True
+    )
+
+    image_url: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True
+    )
+
     created_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now()
+        DateTime,
+        nullable=False,
+        server_default=func.now()
     )
 
     # Relationships
-    lesson: Mapped["Lesson"] = relationship("Lesson", back_populates="questions")
-
-
-class UserProgress(Base):
-    """Tiến trình học của user cho từng bài học."""
-
-    __tablename__ = "user_progress"
-
-    user_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    lesson: Mapped["Lesson"] = relationship(
+        "Lesson",
+        back_populates="questions"
     )
-    lesson_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("lessons.id", ondelete="CASCADE"), primary_key=True
-    )
-    is_completed: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    accuracy: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    time_spent_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    last_studied_at: Mapped[datetime] = mapped_column(
-        DateTime, nullable=False, server_default=func.now(), onupdate=func.now()
-    )
-
-    # Relationships
-    lesson: Mapped["Lesson"] = relationship("Lesson", back_populates="progress_records")
