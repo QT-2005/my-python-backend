@@ -8,6 +8,7 @@ from app.routers.auth_router import router as auth_router
 from app.routers.content_router import router as content_router
 from app.routers.user_router import router as user_router
 from app.routers.progress_router import router as progress_router
+from app.routers.review_router import router as review_router
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -39,6 +40,7 @@ app.include_router(auth_router, prefix="/api/v1")
 app.include_router(content_router, prefix="/api/v1")
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(progress_router, prefix="/api/v1")
+app.include_router(review_router, prefix="/api/v1")
 
 # ── Health Check ─────────────────────────────────────────────
 @app.get("/health", tags=["System"])

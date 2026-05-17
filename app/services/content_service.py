@@ -5,7 +5,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
  
-from app.models.content import Lesson, Question, Topic, UserProgress
+from app.models.content import Lesson, Question, Topic
+from app.models.user_progress import UserProgress
 from app.models.user_meta import UserStats
 from app.schemas.content_schema import (
     LessonDetailResponse,
