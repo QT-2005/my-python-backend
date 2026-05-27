@@ -10,6 +10,7 @@ from app.schemas.user_schema import (
     DashboardResponse,
     UserProfileResponse,
     UpdateUserSettingsRequest,
+    UpdateUserProfileRequest,
     ChangePasswordRequest
 )
 
@@ -39,6 +40,15 @@ async def update_settings(
     db: AsyncSession = Depends(get_db)
 ):
     return await UserService(db).update_settings(current_user, data)
+
+
+@router.patch("/profile")
+async def update_profile(
+    data: UpdateUserProfileRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    return await UserService(db).update_profile(current_user, data)
 
 
 @router.put("/security")

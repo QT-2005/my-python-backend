@@ -3,6 +3,31 @@ from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
+class DailyGoalStatus(BaseModel):
+    minutes: int
+    target_xp: int
+    today_xp: int
+    percent: float
+    completed_lessons: int
+    target_lessons: int
+
+
+class DashboardMissionItem(BaseModel):
+    lesson_id: str
+    topic_id: str
+    title: str
+    description: str
+    category: Literal["Vocabulary", "Grammar"]
+    level: Literal["A1", "A2", "B1", "B2", "C1", "C2"]
+    lesson_order: int
+    xp_reward: int
+    completed_questions: int
+    total_questions: int
+    progress_percent: float
+    is_completed: bool
+    label: str
+
+
 # =========================
 # DASHBOARD RESPONSE
 # =========================
@@ -16,6 +41,11 @@ class DashboardResponse(BaseModel):
     tier: str
 
     message: Optional[str] = None
+    words_mastered: int = 0
+    accuracy: float = 0.0
+    retention_rate: float = 0.0
+    daily_goal: DailyGoalStatus | None = None
+    missions: list[DashboardMissionItem] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
@@ -64,6 +94,22 @@ class UpdateUserSettingsRequest(BaseModel):
 
     theme: Optional[
         Literal["light", "dark"]
+    ] = None
+
+    high_contrast_borders: Optional[bool] = None
+
+    notifications_enabled: Optional[bool] = None
+
+    current_level: Optional[
+        Literal["A1", "A2", "B1", "B2", "C1", "C2"]
+    ] = None
+
+
+class UpdateUserProfileRequest(BaseModel):
+    full_name: Optional[str] = Field(default=None, min_length=1, max_length=150)
+    avatar_url: Optional[str] = Field(default=None, max_length=500)
+    current_level: Optional[
+        Literal["A1", "A2", "B1", "B2", "C1", "C2"]
     ] = None
 
 

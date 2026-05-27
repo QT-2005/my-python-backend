@@ -2,3 +2,5 @@ from .user import User
 from .user_meta import UserSettings, UserStats
 from .content import Topic, Lesson, Question
 from .user_progress import UserProgress
+from .lesson_session import UserLessonSession
+from .question_attempt import UserQuestionAttempt

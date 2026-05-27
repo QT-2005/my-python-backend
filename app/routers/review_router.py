@@ -8,6 +8,7 @@ from app.core.dependencies import get_current_user
 from app.models.user import User
 
 from app.schemas.review_schema import (
+    ReviewMistakesResponse,
     ReviewLessonsResponse
 )
 
@@ -36,4 +37,21 @@ async def get_review_lessons(
 
     return await service.get_review_lessons(
         current_user
+    )
+
+
+@router.get(
+    "/mistakes",
+    response_model=ReviewMistakesResponse
+)
+async def get_review_mistakes(
+    limit: int = 50,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    service = ReviewService(db)
+
+    return await service.get_mistakes(
+        current_user,
+        limit=limit
     )

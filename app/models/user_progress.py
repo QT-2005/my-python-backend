@@ -4,7 +4,9 @@ from sqlalchemy import (
     Integer,
     Boolean,
     ForeignKey,
-    DECIMAL
+    DECIMAL,
+    DateTime,
+    func,
 )
 
 from sqlalchemy.orm import relationship
@@ -46,6 +48,13 @@ class UserProgress(Base):
     needs_review = Column(
         Boolean,
         default=False
+    )
+
+    last_studied_at = Column(
+        DateTime,
+        nullable=False,
+        server_default=func.now(),
+        onupdate=func.now()
     )
 
     # Relationships
