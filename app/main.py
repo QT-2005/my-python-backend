@@ -1,14 +1,19 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
+from app.core.database import init_db
 
 from app.routers.auth_router import router as auth_router
 from app.routers.content_router import router as content_router
 from app.routers.user_router import router as user_router
 from app.routers.progress_router import router as progress_router
 from app.routers.review_router import router as review_router
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -27,9 +32,19 @@ app.add_middleware(
 )
 
 
+# ── Startup ────────────────────────────────────────────────────
+@app.on_event("startup")
+async def on_startup():
+    """Khởi tạo database connection pool và tạo bảng nếu chưa có."""
+    logger.info("Starting up – initializing database...")
+    await init_db()
+    logger.info("Startup complete.")
+
+
 # ── Global Exception Handler ─────────────────────────────────
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.error("Unhandled exception on %s %s: %s", request.method, request.url.path, exc, exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Lỗi server, vui lòng thử lại sau."},
