@@ -164,6 +164,8 @@ const completedLessons = daily_goal?.completed_lessons || 0;
   "ranking": "Top 10%",
   "needs_review": false,
   "already_completed": false,
+  "today_xp": 190,
+  "completed_lessons": 2,
   "daily_goal_percent": 100,
   "mastery": { ... }
 }
@@ -172,11 +174,15 @@ const completedLessons = daily_goal?.completed_lessons || 0;
 ### Xử lý sau submit
 
 ```typescript
-// Cập nhật today_xp local (nếu có tracking)
-todayXp += earned_xp;
+// Dùng today_xp từ response để cập nhật thanh tiến độ
+const targetXp = daily_goal_minutes * 30;          // tự tính
+const percent = Math.min(today_xp / targetXp * 100, 100);  // dùng today_xp từ response
 
-// Tính daily_goal_percent mới sau submit
-const newPercent = Math.min(todayXp / (daily_goal_minutes * 30) * 100, 100);
+// Hoặc dùng daily_goal_percent trực tiếp từ response
+const percent = response.daily_goal_percent;
+
+// completed_lessons từ response để hiển thị "X/Y lessons completed"
+const completedLessons = response.completed_lessons;
 
 // Nếu already_completed = true → không cộng earned_xp nữa
 // (Backend trả earned_xp = 0 nếu lesson đã hoàn thành trước đó)

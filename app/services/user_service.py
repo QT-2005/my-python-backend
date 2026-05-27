@@ -168,6 +168,27 @@ class UserService:
             for lesson, topic in rows[:3]:
                 selected.append((lesson, topic, lesson.xp_reward))
 
+        # 4) Also include lessons studied today so user sees their progress
+        today_result = await self.db.execute(
+            select(UserLessonSession.lesson_id).distinct().where(
+                UserLessonSession.user_id == user.id,
+                func.date(UserLessonSession.studied_at) == date.today(),
+            )
+        )
+        today_lesson_ids = {row[0] for row in today_result.all()}
+        existing_ids = {lesson.id for lesson, _, _ in selected}
+        missing_ids = list(today_lesson_ids - existing_ids)
+
+        if missing_ids:
+            today_stmt = (
+                select(Lesson, Topic)
+                .join(Topic, Topic.id == Lesson.topic_id)
+                .where(Lesson.id.in_(missing_ids))
+            )
+            today_result = await self.db.execute(today_stmt)
+            for lesson, topic in today_result.all():
+                selected.append((lesson, topic, 0))  # XP already counted
+
         # Build mission items with progress
         lesson_ids = [lesson.id for lesson, _, _ in selected]
         progress_by_lesson = await self._get_progress_by_lesson(user.id, lesson_ids)
