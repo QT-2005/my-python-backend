@@ -36,11 +36,22 @@ class Settings(BaseSettings):
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
+    # SSL: "disable" | "require" (mặc định) | "verify-ca" | "verify-full"
+    # - disable: tắt SSL (chỉ dùng local)
+    # - require: bật SSL nhưng không verify cert (dùng cho Aiven nếu chưa có CA)
+    # - verify-ca / verify-full: yêu cầu CA certificate (đường dẫn trong DB_SSL_CA)
+    DB_SSL_MODE: str = "require"
+
+    # Đường dẫn tới CA certificate file (tải từ Aiven Console)
+    # Chỉ dùng khi DB_SSL_MODE = "verify-ca" hoặc "verify-full"
+    DB_SSL_CA: str = ""
+
     @property
     def DB_USE_SSL(self) -> bool:
-        """Kiểm tra xem có cần SSL không (dựa vào host không phải local)"""
-        host = self.DB_HOST.lower()
-        return not (host == "localhost" or host == "127.0.0.1" or host.startswith("10.") or host.startswith("172."))
+        """Kiểm tra xem có cần SSL không"""
+        if self.DB_SSL_MODE == "disable":
+            return False
+        return True
 
     # JWT
     JWT_SECRET_KEY: str = ""
