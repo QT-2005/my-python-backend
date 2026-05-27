@@ -1,5 +1,4 @@
 import logging
-import os
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
@@ -8,29 +7,10 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-
-def _build_ssl_args() -> dict:
-    """Xây dựng tham số SSL cho kết nối MySQL."""
-    if not settings.DB_USE_SSL:
-        return {}
-
-    ca_path = settings.DB_SSL_CA
-
-    # Nếu có CA cert path, kiểm tra file tồn tại
-    if ca_path:
-        # Hỗ trợ relative path từ thư mục dự án
-        if not os.path.isabs(ca_path):
-            ca_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ca_path)
-        if os.path.isfile(ca_path):
-            logger.info("Using SSL CA certificate: %s", ca_path)
-            return {"ssl": {"ca": ca_path}}
-        else:
-            logger.warning("SSL CA file not found at %s, falling back to default SSL", ca_path)
-
-    # Mặc định: bật SSL xác thực bằng system CA
-    logger.info("Using default system SSL (no custom CA)")
-    return {"ssl": True}
-
+# SSL args cho cloud database
+_ssl_args = {}
+if settings.DB_USE_SSL:
+    _ssl_args = {"ssl": True}
 
 engine = create_async_engine(
     settings.DATABASE_URL,
@@ -38,7 +18,7 @@ engine = create_async_engine(
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
-    connect_args=_build_ssl_args(),
+    connect_args=_ssl_args,
 )
 
 AsyncSessionLocal = async_sessionmaker(
