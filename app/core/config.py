@@ -1,4 +1,7 @@
 import os
+from typing import Any
+
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -7,6 +10,15 @@ class Settings(BaseSettings):
     APP_NAME: str = "LexiRise API"
     
     DEBUG: bool = False
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug(cls, v: Any) -> bool:
+        if isinstance(v, bool):
+            return v
+        if isinstance(v, str):
+            return v.lower() in ("true", "1", "yes")
+        return bool(v)
 
     # Database (Pydantic tự động lấy từ môi trường nếu có, nếu không sẽ dùng default bên dưới)
     DB_HOST: str = "localhost"
@@ -17,12 +29,18 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
-        # Đối với Aiven MySQL, cần thêm ?ssl=true hoặc tham số ssl_ca
-        # Nếu dùng aiomysql, cách đơn giản nhất để vượt qua check SSL trên Cloud:
+        # Xoá ?ssl=true vì aiomysql/pymysql không xử lý đúng kiểu string
+        # Thay vào đó dùng ssl_args trong create_async_engine (xem database.py)
         return (
             f"mysql+aiomysql://{self.DB_USER}:{self.DB_PASSWORD}"
-            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}?ssl=true"
+            f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
+
+    @property
+    def DB_USE_SSL(self) -> bool:
+        """Kiểm tra xem có cần SSL không (dựa vào host không phải local)"""
+        host = self.DB_HOST.lower()
+        return not (host == "localhost" or host == "127.0.0.1" or host.startswith("10.") or host.startswith("172."))
 
     # JWT
     JWT_SECRET_KEY: str = ""
