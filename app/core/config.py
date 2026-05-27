@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     # App
     APP_NAME: str = "LexiRise API"
+    
     DEBUG: bool = False
 
     # Database (Pydantic tự động lấy từ môi trường nếu có, nếu không sẽ dùng default bên dưới)
