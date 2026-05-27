@@ -36,11 +36,15 @@ class Settings(BaseSettings):
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
         )
 
+    # Đường dẫn tới CA certificate file (tải từ Aiven Console)
+    # Nếu để trống, sẽ dùng SSL mặc định của hệ thống
+    DB_SSL_CA: str = ""
+
     @property
     def DB_USE_SSL(self) -> bool:
         """Kiểm tra xem có cần SSL không (dựa vào host không phải local)"""
         host = self.DB_HOST.lower()
-        return not (host == "localhost" or host == "127.0.0.1" or host.startswith("10.") or host.startswith("172."))
+        return not (host == "localhost" or host == "127.0.0.1" or host.startswith("10.") or host.startswith("172.") or host.startswith("192.168."))
 
     # JWT
     JWT_SECRET_KEY: str = ""
