@@ -15,6 +15,25 @@ class TopicListResponse(BaseModel):
     topics: list[TopicResponse]
     total: int
 
+
+class ExploreTopicResponse(TopicResponse):
+    completed_lessons: int = 0
+    progress_percent: float = 0.0
+
+
+class ExploreStatsResponse(BaseModel):
+    retention_rate: float
+    daily_goal_minutes: int
+    daily_goal_completed: int
+    daily_goal_target: int
+
+
+class ExploreResponse(BaseModel):
+    vocabulary_topics: list[ExploreTopicResponse]
+    grammar_topics: list[ExploreTopicResponse]
+    stats: ExploreStatsResponse
+    total: int
+
 class LessonResponse(BaseModel):
     id: str
     topic_id: str

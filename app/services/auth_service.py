@@ -41,7 +41,10 @@ class AuthService:
         result = await self.db.execute(
             select(User)
             .where(User.id == user_id)
-            .options(selectinload(User.stats))
+            .options(
+                selectinload(User.stats),
+                selectinload(User.settings),
+            )
         )
         return result.scalars().first()
 
