@@ -78,6 +78,7 @@ class ProgressService:
             raise
 
         today_xp = await self._calculate_today_xp(user.id)
+        completed_lessons = await self._count_today_completed_lessons(user.id)
         daily_goal_percent = self._daily_goal_percent(
             today_xp,
             self._daily_goal_xp(user.daily_goal_minutes),
@@ -96,6 +97,8 @@ class ProgressService:
             ranking=self._calculate_ranking(stats.total_xp),
             needs_review=progress.needs_review,
             already_completed=already_completed,
+            today_xp=today_xp,
+            completed_lessons=completed_lessons,
             daily_goal_percent=daily_goal_percent,
             mastery=self._build_mastery(stats.total_xp),
         )

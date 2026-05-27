@@ -32,6 +32,8 @@ class SubmitProgressResponse(BaseModel):
     ranking: str
     needs_review: bool
     already_completed: bool
+    today_xp: int
+    completed_lessons: int
     daily_goal_percent: float
     mastery: SessionMasteryResponse
 
